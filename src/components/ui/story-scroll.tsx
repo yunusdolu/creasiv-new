@@ -36,7 +36,11 @@ export const FlowSection: React.FC<FlowSectionProps> = ({
     id={id}
     data-flow-section
     aria-label={ariaLabel}
-    className={cx('relative min-h-svh w-full overflow-hidden', className)}
+    className={cx(
+      // overflow: clip (hidden değil): hidden elemanı kaydırma kabı yapar ve CSS view() zaman çizelgesini bozar
+      'relative min-h-svh w-full overflow-hidden [overflow:clip]',
+      className,
+    )}
   >
     <div
       data-flow-inner
@@ -89,6 +93,11 @@ const FlowArt: React.FC<FlowArtProps> = ({
 
       const triggers: ScrollTrigger[] = [];
 
+      // CSS scroll-driven animation desteği (Chrome/Android 115+, Safari 26+). Yoksa GSAP ile aynı efekt.
+      const useCssScrollTimeline =
+        CSS.supports('animation-timeline: view()') && CSS.supports('overflow: clip');
+      const cssAnimated: HTMLElement[] = [];
+
       sections.forEach((section, i) => {
         gsap.set(section, { zIndex: i + 1 });
 
@@ -96,18 +105,25 @@ const FlowArt: React.FC<FlowArtProps> = ({
         if (!inner) return;
 
         if (i > 0) {
-          gsap.set(inner, { rotation: 30, transformOrigin: 'bottom left' });
-          const tween = gsap.to(inner, {
-            rotation: 0,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: section,
-              start: 'top bottom',
-              end: 'top 25%',
-              scrub: true,
-            },
-          });
-          if (tween.scrollTrigger) triggers.push(tween.scrollTrigger);
+          if (useCssScrollTimeline) {
+            // Dönüşü tarayıcıya bırak (globals.css → .flow-rotate-in): kaydırmayla birlikte ekran kartında,
+            // ekranın yenileme hızında (120Hz) çalışır; JS her karede transform yazmaz
+            inner.classList.add('flow-rotate-in');
+            cssAnimated.push(inner);
+          } else {
+            gsap.set(inner, { rotation: 30, transformOrigin: 'bottom left' });
+            const tween = gsap.to(inner, {
+              rotation: 0,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: section,
+                start: 'top bottom',
+                end: 'top 25%',
+                scrub: true,
+              },
+            });
+            if (tween.scrollTrigger) triggers.push(tween.scrollTrigger);
+          }
         }
 
         if (i < sections.length - 1) {
@@ -168,6 +184,7 @@ const FlowArt: React.FC<FlowArtProps> = ({
 
       return () => {
         triggers.forEach((t) => t.kill());
+        cssAnimated.forEach((el) => el.classList.remove('flow-rotate-in'));
         delete (window as any).creasivScrollTo;
         delete (window as any).creasivGetSectionTop;
       };
@@ -179,7 +196,7 @@ const FlowArt: React.FC<FlowArtProps> = ({
     <main
       ref={containerRef}
       aria-label={ariaLabel}
-      className={cx('w-full overflow-x-hidden', className)}
+      className={cx('w-full overflow-x-hidden [overflow-x:clip]', className)}
     >
       {children}
     </main>

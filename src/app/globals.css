@@ -7,10 +7,33 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  /* clip, hidden gibi yana taşmayı keser ama body'yi kaydırma kabı yapmaz (CSS view() animasyonu için şart) */
+  overflow-x: clip;
   background: #000;
   color: #fff;
 }
 
 [data-flow-section] {
   will-change: transform;
+}
+
+/* Bölüm geçişindeki dönüş: kaydırmaya bağlı, tarayıcının ekran kartında çalışır.
+   GSAP karşılığı: start 'top bottom' → end 'top 25%' (75vh), ease none, 30deg → 0deg */
+@keyframes flow-rotate-in {
+  from {
+    transform: rotate(30deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .flow-rotate-in {
+      animation: flow-rotate-in linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 75vh;
+    }
+  }
 }

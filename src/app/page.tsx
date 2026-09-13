@@ -27,90 +27,95 @@ function CircularTextBadge({
   mobileText?: string;
 }) {
   const pathId = `circle-path-${id}`;
-  const svgRef = React.useRef<SVGSVGElement>(null);
-  const angleRef = React.useRef(0);
-  const speedRef = React.useRef(15); // Başlangıç dönüş hızı: 15 deg/s (24 saniyede 1 tam tur)
-  const isHoveredRef = React.useRef(false);
+  const rotorRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    const button = svgRef.current?.closest('button');
-    const handleEnter = () => {
-      isHoveredRef.current = true;
-    };
-    const handleLeave = () => {
-      isHoveredRef.current = false;
-    };
+    const rotor = rotorRef.current;
+    if (!rotor || typeof rotor.animate !== 'function') return;
 
-    if (button) {
-      button.addEventListener('mouseenter', handleEnter);
-      button.addEventListener('mouseleave', handleLeave);
-    }
+    // Dönüş Web Animations API ile, bir <div> üzerinde: tarayıcı ekran kartında (compositor) çalıştırır.
+    // Eskiden her karede JS ile transform yazılıyordu; bu her karede tüm sayfada stil + yerleşim hesabı tetikliyor,
+    // mobilde kaydırma animasyonlarını takıltılı yapıyordu. Animasyon doğrudan <svg>'ye verilince Chrome onu
+    // yine ana iş parçacığında çalıştırıyor (ölçüldü), bu yüzden dönen eleman bir HTML kabı.
+    const animation = rotor.animate(
+      [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
+      { duration: 24000, iterations: Infinity }, // Normal hız: 24s / tur
+    );
 
-    let animationFrameId: number;
-    let lastTime = performance.now();
+    // Hover (masaüstü): hız 24s/tur'dan ~6.9s/tur'a yumuşakça çıkar, kaldığı açıdan devam eder.
+    // rAF sadece hız geçişi sürerken çalışır.
+    const button = rotor.closest('button');
+    const HOVER_RATE = 52 / 15;
+    let target = 1;
+    let rafId = 0;
+    let last = 0;
 
-    const animate = (currentTime: number) => {
-      const delta = Math.min((currentTime - lastTime) / 1000, 0.1);
-      lastTime = currentTime;
-
-      // Normal hız: 15 deg/s (24s / tur), Hover hızı: 52 deg/s (~6.9s / tur)
-      const targetSpeed = isHoveredRef.current ? 52 : 15;
-
-      // Hızı mevcut değerden hedefe doğru yumuşakça ivmelendir (sıfırlamadan, kaldığı açıdan hızlanır/yavaşlar)
-      speedRef.current += (targetSpeed - speedRef.current) * Math.min(delta * 4, 1);
-      angleRef.current = (angleRef.current + speedRef.current * delta) % 360;
-
-      if (svgRef.current) {
-        svgRef.current.style.transform = `rotate(${angleRef.current}deg)`;
+    const easeRate = (now: number) => {
+      const delta = last ? Math.min((now - last) / 1000, 0.1) : 0.016;
+      last = now;
+      const rate = animation.playbackRate + (target - animation.playbackRate) * Math.min(delta * 4, 1);
+      if (Math.abs(target - rate) < 0.01) {
+        animation.playbackRate = target;
+        rafId = 0;
+        last = 0;
+        return;
       }
-
-      animationFrameId = requestAnimationFrame(animate);
+      animation.playbackRate = rate;
+      rafId = requestAnimationFrame(easeRate);
     };
 
-    animationFrameId = requestAnimationFrame(animate);
+    const setTarget = (value: number) => {
+      target = value;
+      if (!rafId) rafId = requestAnimationFrame(easeRate);
+    };
+    const handleEnter = () => setTarget(HOVER_RATE);
+    const handleLeave = () => setTarget(1);
+
+    button?.addEventListener('mouseenter', handleEnter);
+    button?.addEventListener('mouseleave', handleLeave);
 
     return () => {
-      if (button) {
-        button.removeEventListener('mouseenter', handleEnter);
-        button.removeEventListener('mouseleave', handleLeave);
-      }
-      cancelAnimationFrame(animationFrameId);
+      button?.removeEventListener('mouseenter', handleEnter);
+      button?.removeEventListener('mouseleave', handleLeave);
+      cancelAnimationFrame(rafId);
+      animation.cancel();
     };
   }, []);
 
   return (
-    // Gölge filtresi <text> yerine <svg> üzerinde: iOS Safari SVG içi elemanlardaki CSS filter'da yazıyı gizleyebiliyor
-    <svg
-      ref={svgRef}
-      viewBox="0 0 200 200"
-      className="absolute inset-0 h-full w-full pointer-events-none select-none z-10 will-change-transform drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]"
+    <div
+      ref={rotorRef}
+      className="absolute inset-0 pointer-events-none select-none z-10 will-change-transform"
       aria-hidden="true"
     >
-      <defs>
-        <path
-          id={pathId}
-          d="M 100, 100 m 0, -80 a 80,80 0 1,1 0,160 a 80,80 0 1,1 0,-160"
-        />
-      </defs>
-      {/* Masaüstü: metin iki kez, ince yazı */}
-      <text
-        className="hidden sm:inline font-black uppercase fill-white"
-        style={{ fontSize: '11px', fontWeight: 900, letterSpacing: '0.04em' }}
-      >
-        <textPath href={`#${pathId}`} xlinkHref={`#${pathId}`} startOffset="0%" textLength={492} lengthAdjust="spacing">
-          {text}
-        </textPath>
-      </text>
-      {/* Mobil: logo küçük olduğu için metin tek sefer ve yaklaşık iki kat büyük */}
-      <text
-        className="sm:hidden font-black uppercase fill-white"
-        style={{ fontSize: '19px', fontWeight: 900, letterSpacing: '0.02em' }}
-      >
-        <textPath href={`#${pathId}`} xlinkHref={`#${pathId}`} startOffset="0%" textLength={492} lengthAdjust="spacing">
-          {mobileText}
-        </textPath>
-      </text>
-    </svg>
+      {/* Gölge filtresi <text> yerine <svg> üzerinde: iOS Safari SVG içi elemanlardaki CSS filter'da yazıyı gizleyebiliyor */}
+      <svg viewBox="0 0 200 200" className="h-full w-full drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]">
+        <defs>
+          <path
+            id={pathId}
+            d="M 100, 100 m 0, -80 a 80,80 0 1,1 0,160 a 80,80 0 1,1 0,-160"
+          />
+        </defs>
+        {/* Masaüstü: metin iki kez, ince yazı */}
+        <text
+          className="hidden sm:inline font-black uppercase fill-white"
+          style={{ fontSize: '11px', fontWeight: 900, letterSpacing: '0.04em' }}
+        >
+          <textPath href={`#${pathId}`} xlinkHref={`#${pathId}`} startOffset="0%" textLength={492} lengthAdjust="spacing">
+            {text}
+          </textPath>
+        </text>
+        {/* Mobil: logo küçük olduğu için metin tek sefer ve yaklaşık iki kat büyük */}
+        <text
+          className="sm:hidden font-black uppercase fill-white"
+          style={{ fontSize: '19px', fontWeight: 900, letterSpacing: '0.02em' }}
+        >
+          <textPath href={`#${pathId}`} xlinkHref={`#${pathId}`} startOffset="0%" textLength={492} lengthAdjust="spacing">
+            {mobileText}
+          </textPath>
+        </text>
+      </svg>
+    </div>
   );
 }
 

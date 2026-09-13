@@ -84,12 +84,16 @@ const FlowArt: React.FC<FlowArtProps> = ({
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  // iOS Safari alt araç çubuğu rengi: alttaki şeridi (globals.css → .safari-tint) o an ekranın altını
-  // kaplayan bölümün rengine boyar. Renk sadece bölüm değişince yazılır; kaydırmada her karede iş yapılmaz.
+  // O an ekranın altını kaplayan bölümün rengini iki yere yazar:
+  // - iOS Safari alt araç çubuğu şeridi (globals.css → .safari-tint; sadece iOS'ta görünür)
+  // - sayfa zemini (html/body): Safari'de en üst/en alttan esnetince kartların ötesinde görünen alan
+  //   (Safari üst çubuğu açılıştaki body rengine göre boyar, sonradan değişen rengi yok sayar)
+  // Renk sadece bölüm değişince yazılır; kaydırmada her karede iş yapılmaz.
   useEffect(() => {
     const tint = tintRef.current;
     const container = containerRef.current;
-    if (!tint || !container || getComputedStyle(tint).display === 'none') return;
+    if (!container) return;
+    const tintVisible = !!tint && getComputedStyle(tint).display !== 'none';
 
     const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-flow-section]'));
     const colors = sections.map((section) => {
@@ -113,7 +117,9 @@ const FlowArt: React.FC<FlowArtProps> = ({
       });
       if (active !== current && colors[active]) {
         current = active;
-        tint.style.backgroundColor = colors[active];
+        if (tintVisible && tint) tint.style.backgroundColor = colors[active];
+        document.documentElement.style.backgroundColor = colors[active];
+        document.body.style.backgroundColor = colors[active];
       }
     };
 
@@ -129,6 +135,8 @@ const FlowArt: React.FC<FlowArtProps> = ({
     return () => {
       window.removeEventListener('scroll', onScroll);
       ScrollTrigger.removeEventListener('refresh', update);
+      document.documentElement.style.backgroundColor = '';
+      document.body.style.backgroundColor = '';
     };
   }, []);
 

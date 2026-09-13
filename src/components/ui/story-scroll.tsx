@@ -36,6 +36,8 @@ export const FlowSection: React.FC<FlowSectionProps> = ({
     id={id}
     data-flow-section
     aria-label={ariaLabel}
+    // Bölüm rengi CSS değişkeni olarak: son bölümün rengi sayfa bitiminin altına uzatılır (globals.css)
+    style={{ '--flow-bg': style.backgroundColor } as React.CSSProperties}
     className={cx(
       // overflow: clip (hidden değil): hidden elemanı kaydırma kabı yapar ve CSS view() zaman çizelgesini bozar
       // 100lvh: Safari 26'da sayfa yüzen çubukların arkasına uzanır; svh kısa kalıp alttaki kartı gösteriyordu
@@ -72,8 +74,7 @@ const FlowArt: React.FC<FlowArtProps> = ({
   'aria-label': ariaLabel = 'Story scroll',
 }) => {
   const containerRef = useRef<HTMLElement>(null);
-  const tintTopRef = useRef<HTMLDivElement>(null);
-  const tintBottomRef = useRef<HTMLDivElement>(null);
+  const tintRef = useRef<HTMLDivElement>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -85,18 +86,22 @@ const FlowArt: React.FC<FlowArtProps> = ({
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  // O an ekranın kenarlarını kaplayan bölümlerin rengini yazar:
-  // - iOS Safari üst/alt araç çubuğu şeritleri (globals.css → .safari-tint; sadece iOS'ta görünür).
-  //   Safari body arka planının sonradan değişmesini üst çubuğa yansıtmıyor (açılıştaki mavide takılıyor);
-  //   kenara değen fixed eleman ise body'ye göre önceliklidir ve rengi canlı güncellenir.
-  // - sayfa zemini (html/body): en alttan/üstten esnetince kartların ötesinde görünen alan; alt kenara göre.
-  // Renkler sadece bölüm değişince yazılır; kaydırmada her karede iş yapılmaz.
+  // Son bölümü işaretle: rengi sayfa bitiminin altına uzatılır (globals.css → [data-flow-last])
   useEffect(() => {
+    const sections = containerRef.current?.querySelectorAll<HTMLElement>('[data-flow-section]');
+    const last = sections?.[sections.length - 1];
+    if (!last) return;
+    last.setAttribute('data-flow-last', '');
+    return () => last.removeAttribute('data-flow-last');
+  }, []);
+
+  // iOS Safari 26 alt araç çubuğu rengi: alttaki şeridi (globals.css → .safari-tint) o an ekranın altını
+  // kaplayan bölümün rengine boyar. Renk sadece bölüm değişince yazılır; kaydırmada her karede iş yapılmaz.
+  // Not: html/body arka planı bilerek değiştirilmiyor; değişince Safari üst çubuğu açılıştaki renkte sabitliyor.
+  useEffect(() => {
+    const tint = tintRef.current;
     const container = containerRef.current;
-    if (!container) return;
-    const tintTop = tintTopRef.current;
-    const tintBottom = tintBottomRef.current;
-    const tintsVisible = !!tintTop && getComputedStyle(tintTop).display !== 'none';
+    if (!tint || !container || getComputedStyle(tint).display === 'none') return;
 
     const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-flow-section]'));
     const colors = sections.map((section) => {
@@ -104,35 +109,23 @@ const FlowArt: React.FC<FlowArtProps> = ({
       return inner ? getComputedStyle(inner).backgroundColor : '';
     });
 
-    let currentTop = -1;
-    let currentBottom = -1;
+    let current = -1;
     let ticking = false;
 
     const update = () => {
       ticking = false;
       const getTop = (window as any).creasivGetSectionTop as ((id: string) => number) | undefined;
-      const y = window.scrollY;
-      // Üst kenar: bölümün üst kenarı ekranın tepesine ulaşınca (dönerek gelen kart tepeye daha önce değmez).
-      // Alt kenar: yeni bölüm ekran yüksekliğinin ~%55'i kadar girince; dönerek gelen kart ancak o noktada
-      // alt kenarın çoğunu kaplıyor (daha erken geçişte önceki bölümün altında ince bir çizgi görünüyordu).
-      const bottomThreshold = y + window.innerHeight * 0.45;
-      let activeTop = 0;
-      let activeBottom = 0;
+      // Yeni bölüm ekran yüksekliğinin ~%55'i kadar girince renge geç: dönerek gelen kart ancak o noktada
+      // alt kenarın çoğunu kaplıyor (daha erken geçişte önceki bölümün altında ince bir çizgi görünüyordu)
+      const threshold = window.scrollY + window.innerHeight * 0.45;
+      let active = 0;
       sections.forEach((section, i) => {
         const top = getTop && section.id ? getTop(section.id) : section.offsetTop;
-        if (y + 1 >= top) activeTop = i;
-        if (bottomThreshold >= top) activeBottom = i;
+        if (threshold >= top) active = i;
       });
-
-      if (activeTop !== currentTop && colors[activeTop]) {
-        currentTop = activeTop;
-        if (tintsVisible && tintTop) tintTop.style.backgroundColor = colors[activeTop];
-      }
-      if (activeBottom !== currentBottom && colors[activeBottom]) {
-        currentBottom = activeBottom;
-        if (tintsVisible && tintBottom) tintBottom.style.backgroundColor = colors[activeBottom];
-        document.documentElement.style.backgroundColor = colors[activeBottom];
-        document.body.style.backgroundColor = colors[activeBottom];
+      if (active !== current && colors[active]) {
+        current = active;
+        tint.style.backgroundColor = colors[active];
       }
     };
 
@@ -148,8 +141,6 @@ const FlowArt: React.FC<FlowArtProps> = ({
     return () => {
       window.removeEventListener('scroll', onScroll);
       ScrollTrigger.removeEventListener('refresh', update);
-      document.documentElement.style.backgroundColor = '';
-      document.body.style.backgroundColor = '';
     };
   }, []);
 
@@ -270,8 +261,7 @@ const FlowArt: React.FC<FlowArtProps> = ({
       className={cx('w-full overflow-x-hidden [overflow-x:clip]', className)}
     >
       {children}
-      <div ref={tintTopRef} className="safari-tint safari-tint--top" aria-hidden="true" />
-      <div ref={tintBottomRef} className="safari-tint safari-tint--bottom" aria-hidden="true" />
+      <div ref={tintRef} className="safari-tint" aria-hidden="true" />
     </main>
   );
 };

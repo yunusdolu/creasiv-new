@@ -25,11 +25,19 @@ body {
   border-bottom: calc(100lvh - 100svh) solid transparent;
 }
 
-/* iOS Safari 26: üst ve alt araç çubuğu rengini o kenara değen fixed elemanın arka planından alır
-   (en az %80 genişlik, ≥3px yükseklik, kenara ≤4px); böyle bir eleman yoksa body arka planına bakar.
-   Pin'lenen bölümler de fixed olduğu için çubuklar önceki bölümün renginde takılı kalıyordu, body rengi
-   değişince de üst çubuk alttaki kartın rengini alıyordu. Bu şeritler o an ekranın üst/alt kenarını
-   kaplayan bölümün rengini taşır (renk story-scroll.tsx'te güncellenir). Sadece iOS/iPadOS WebKit'te. */
+/* Taban: Safari'de sayfanın en altından esnetince son kartın ötesinde görünen alan.
+   html/body rengini değiştirmek yerine (Safari üst çubuğu o zaman eski renkte sabitliyor) son kartın rengi
+   box-shadow ile aşağı uzatılır; box-shadow kaydırılabilir alanı büyütmez.
+   :last-of-type kullanılamaz: ScrollTrigger her pin'lenen bölümü ayrı bir pin-spacer'a sardığı için
+   hepsi "son" sayılıyor. Son bölüm story-scroll.tsx'te data-flow-last ile işaretlenir. */
+[data-flow-last] {
+  box-shadow: 0 100lvh 0 0 var(--flow-bg, transparent);
+}
+
+/* iOS Safari 26: alt araç çubuğu rengini alt kenara değen fixed elemanın arka planından alır
+   (en az %80 genişlik, ≥3px yükseklik, kenara ≤3px). Pin'lenen bölümler de fixed olduğu için çubuk
+   önceki bölümün renginde takılı kalıyordu. Bu şerit o an ekranın altını kaplayan bölümün rengini taşır
+   (renk story-scroll.tsx'te güncellenir). Sadece iOS/iPadOS WebKit'te gösterilir. */
 .safari-tint {
   display: none;
 }
@@ -46,14 +54,7 @@ body {
     background-color: #1A3DE8;
   }
 
-  /* Üst: ekran dışına taşırılmaz. Safari üstte elemanın kenara ≤4px olmasını istiyor; alttaki gibi
-     top: -8px verilince üst çubuk şeridi yok sayıp açılıştaki body mavisinde kalıyordu. */
-  .safari-tint--top {
-    top: 0;
-    height: 6px;
-  }
-
-  .safari-tint--bottom {
+  .safari-tint {
     bottom: -8px;
   }
 }

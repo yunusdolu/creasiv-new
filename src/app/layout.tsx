@@ -76,7 +76,8 @@ const jsonLd = {
       "@type": "Organization",
       "@id": `${siteUrl}/#organization`,
       name: "Creasiv",
-      url: siteUrl,
+      alternateName: "Creasiv Dijital Ajans",
+      url: `${siteUrl}/`,
       logo: `${siteUrl}/logo-square.png`,
       image: `${siteUrl}/opengraph-image.png`,
       description: siteDescription,
@@ -146,10 +147,12 @@ const jsonLd = {
       },
     },
     {
+      // Google arama sonuçlarındaki site adı bu kayıttan okunur (domain yerine "Creasiv" görünmesi için)
       "@type": "WebSite",
       "@id": `${siteUrl}/#website`,
-      url: siteUrl,
+      url: `${siteUrl}/`,
       name: "Creasiv",
+      alternateName: ["Creasiv Dijital Ajans", "Creasiv Ajans"],
       inLanguage: "tr-TR",
       publisher: { "@id": `${siteUrl}/#organization` },
     },

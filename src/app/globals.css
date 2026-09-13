@@ -9,12 +9,35 @@ body {
   overflow-x: hidden;
   /* clip, hidden gibi yana taşmayı keser ama body'yi kaydırma kabı yapmaz (CSS view() animasyonu için şart) */
   overflow-x: clip;
-  background: #000;
+  /* iOS Safari 26 sayfa en üstteyken üst çubuk rengini body arka planından alır: ilk bölümün mavisi */
+  background: #1A3DE8;
   color: #fff;
 }
 
 [data-flow-section] {
   will-change: transform;
+}
+
+/* iOS Safari 26: alt araç çubuğu rengini alt kenara değen fixed elemanın arka planından alır
+   (en az %80 genişlik, ≥3px yükseklik, kenara ≤3px). Pin'lenen bölümler de fixed olduğu için çubuk
+   önceki bölümün renginde takılı kalıyordu. Bu şerit o an ekranın altını kaplayan bölümün rengini taşır
+   (renk story-scroll.tsx'te güncellenir). Sadece iOS/iPadOS WebKit'te gösterilir. */
+.safari-tint {
+  display: none;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .safari-tint {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: -8px;
+    height: 12px;
+    z-index: 45;
+    pointer-events: none;
+    background-color: #1A3DE8;
+  }
 }
 
 /* Bölüm geçişindeki dönüş: kaydırmaya bağlı, tarayıcının ekran kartında çalışır.

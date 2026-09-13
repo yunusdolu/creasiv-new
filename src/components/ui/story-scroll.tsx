@@ -71,6 +71,7 @@ const FlowArt: React.FC<FlowArtProps> = ({
   'aria-label': ariaLabel = 'Story scroll',
 }) => {
   const containerRef = useRef<HTMLElement>(null);
+  const tintRef = useRef<HTMLDivElement>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -80,6 +81,54 @@ const FlowArt: React.FC<FlowArtProps> = ({
     update();
     mq.addEventListener('change', update);
     return () => mq.removeEventListener('change', update);
+  }, []);
+
+  // iOS Safari alt araç çubuğu rengi: alttaki şeridi (globals.css → .safari-tint) o an ekranın altını
+  // kaplayan bölümün rengine boyar. Renk sadece bölüm değişince yazılır; kaydırmada her karede iş yapılmaz.
+  useEffect(() => {
+    const tint = tintRef.current;
+    const container = containerRef.current;
+    if (!tint || !container || getComputedStyle(tint).display === 'none') return;
+
+    const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-flow-section]'));
+    const colors = sections.map((section) => {
+      const inner = section.querySelector<HTMLElement>('.flow-art-container');
+      return inner ? getComputedStyle(inner).backgroundColor : '';
+    });
+
+    let current = -1;
+    let ticking = false;
+
+    const update = () => {
+      ticking = false;
+      const getTop = (window as any).creasivGetSectionTop as ((id: string) => number) | undefined;
+      // Yeni bölüm ekran yüksekliğinin ~%55'i kadar girince renge geç: dönerek gelen kart ancak o noktada
+      // alt kenarın çoğunu kaplıyor (daha erken geçişte önceki bölümün altında ince bir çizgi görünüyordu)
+      const threshold = window.scrollY + window.innerHeight * 0.45;
+      let active = 0;
+      sections.forEach((section, i) => {
+        const top = getTop && section.id ? getTop(section.id) : section.offsetTop;
+        if (threshold >= top) active = i;
+      });
+      if (active !== current && colors[active]) {
+        current = active;
+        tint.style.backgroundColor = colors[active];
+      }
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    ScrollTrigger.addEventListener('refresh', update);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      ScrollTrigger.removeEventListener('refresh', update);
+    };
   }, []);
 
   useGSAP(
@@ -199,6 +248,7 @@ const FlowArt: React.FC<FlowArtProps> = ({
       className={cx('w-full overflow-x-hidden [overflow-x:clip]', className)}
     >
       {children}
+      <div ref={tintRef} className="safari-tint" aria-hidden="true" />
     </main>
   );
 };

@@ -25,10 +25,11 @@ body {
   border-bottom: calc(100lvh - 100svh) solid transparent;
 }
 
-/* iOS Safari 26: alt araç çubuğu rengini alt kenara değen fixed elemanın arka planından alır
-   (en az %80 genişlik, ≥3px yükseklik, kenara ≤3px). Pin'lenen bölümler de fixed olduğu için çubuk
-   önceki bölümün renginde takılı kalıyordu. Bu şerit o an ekranın altını kaplayan bölümün rengini taşır
-   (renk story-scroll.tsx'te güncellenir). Sadece iOS/iPadOS WebKit'te gösterilir. */
+/* iOS Safari 26: üst ve alt araç çubuğu rengini o kenara değen fixed elemanın arka planından alır
+   (en az %80 genişlik, ≥3px yükseklik, kenara ≤4px); böyle bir eleman yoksa body arka planına bakar.
+   Pin'lenen bölümler de fixed olduğu için çubuklar önceki bölümün renginde takılı kalıyordu, body rengi
+   değişince de üst çubuk alttaki kartın rengini alıyordu. Bu şeritler o an ekranın üst/alt kenarını
+   kaplayan bölümün rengini taşır (renk story-scroll.tsx'te güncellenir). Sadece iOS/iPadOS WebKit'te. */
 .safari-tint {
   display: none;
 }
@@ -39,11 +40,18 @@ body {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: -8px;
     height: 12px;
     z-index: 45;
     pointer-events: none;
     background-color: #1A3DE8;
+  }
+
+  .safari-tint--top {
+    top: -8px;
+  }
+
+  .safari-tint--bottom {
+    bottom: -8px;
   }
 }
 

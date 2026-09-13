@@ -34,29 +34,30 @@ body {
   box-shadow: 0 100lvh 0 0 var(--flow-bg, transparent);
 }
 
-/* iOS Safari 26: alt araç çubuğu rengini alt kenara değen fixed elemanın arka planından alır
-   (en az %80 genişlik, ≥3px yükseklik, kenara ≤3px). Pin'lenen bölümler de fixed olduğu için çubuk
-   önceki bölümün renginde takılı kalıyordu. Bu şerit o an ekranın altını kaplayan bölümün rengini taşır
-   (renk story-scroll.tsx'te güncellenir). Sadece iOS/iPadOS WebKit'te gösterilir. */
+/* Safari 26 araç çubuğu renkleri (theme-color artık kullanılmıyor). Kaynak: github.com/andesco/safari-color-tinting
+   Safari o kenara değen, arka plan rengi olan fixed elemanı body'ye tercih eder ve rengini canlı günceller:
+   - üstte kenara ≤4px, altta ≤3px (alt için bottom: -8px + 12px yükseklik de örneklenir)
+   - iOS'ta en az %80, macOS'ta %90 genişlik; dinamik renk için yükseklik >2px
+   - visibility: hidden elemanlar da örneklenir → şeritler kullanıcıya hiç görünmez
+   Renkler story-scroll.tsx'te o an ekranın üst/alt kenarını kaplayan bölüme göre yazılır. */
 .safari-tint {
-  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  pointer-events: none;
+  visibility: hidden;
+  background-color: #1A3DE8;
 }
 
-@supports (-webkit-touch-callout: none) {
-  .safari-tint {
-    display: block;
-    position: fixed;
-    left: 0;
-    right: 0;
-    height: 12px;
-    z-index: 45;
-    pointer-events: none;
-    background-color: #1A3DE8;
-  }
+.safari-tint--top {
+  top: 0;
+  height: 15px;
+}
 
-  .safari-tint {
-    bottom: -8px;
-  }
+.safari-tint--bottom {
+  bottom: -8px;
+  height: 12px;
 }
 
 /* Bölüm geçişindeki dönüş: kaydırmaya bağlı, tarayıcının ekran kartında çalışır.

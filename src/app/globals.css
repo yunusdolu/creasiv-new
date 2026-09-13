@@ -46,8 +46,11 @@ body {
     background-color: #1A3DE8;
   }
 
+  /* Üst: ekran dışına taşırılmaz. Safari üstte elemanın kenara ≤4px olmasını istiyor; alttaki gibi
+     top: -8px verilince üst çubuk şeridi yok sayıp açılıştaki body mavisinde kalıyordu. */
   .safari-tint--top {
-    top: -8px;
+    top: 0;
+    height: 6px;
   }
 
   .safari-tint--bottom {

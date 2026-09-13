@@ -18,6 +18,13 @@ body {
   will-change: transform;
 }
 
+/* Bölümler 100lvh (çubuklar gizliyken bile ekranı tam kaplar). Alttaki şeffaf kenar, çubuklar açıkken
+   onların altında kalacak alan kadar (lvh - svh) içeriği yukarıda tutar; arka plan rengi kenarın altına
+   da boyandığı için görünmez. Masaüstünde lvh = svh → kenar 0. */
+.flow-art-container {
+  border-bottom: calc(100lvh - 100svh) solid transparent;
+}
+
 /* iOS Safari 26: alt araç çubuğu rengini alt kenara değen fixed elemanın arka planından alır
    (en az %80 genişlik, ≥3px yükseklik, kenara ≤3px). Pin'lenen bölümler de fixed olduğu için çubuk
    önceki bölümün renginde takılı kalıyordu. Bu şerit o an ekranın altını kaplayan bölümün rengini taşır

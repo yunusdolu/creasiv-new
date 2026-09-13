@@ -38,14 +38,15 @@ export const FlowSection: React.FC<FlowSectionProps> = ({
     aria-label={ariaLabel}
     className={cx(
       // overflow: clip (hidden değil): hidden elemanı kaydırma kabı yapar ve CSS view() zaman çizelgesini bozar
-      'relative min-h-svh w-full overflow-hidden [overflow:clip]',
+      // 100lvh: Safari 26'da sayfa yüzen çubukların arkasına uzanır; svh kısa kalıp alttaki kartı gösteriyordu
+      'relative min-h-[100lvh] w-full overflow-hidden [overflow:clip]',
       className,
     )}
   >
     <div
       data-flow-inner
       className={cx(
-        'flow-art-container relative flex min-h-svh w-full flex-col gap-6 px-[4vw] pt-[clamp(2rem,8vw,4vw)]',
+        'flow-art-container relative flex min-h-[100lvh] w-full flex-col gap-6 px-[4vw] pt-[clamp(2rem,8vw,4vw)]',
         innerClassName?.includes('pb-') ? '' : 'pb-[4vw]',
         innerClassName || 'justify-between',
         'will-change-transform',

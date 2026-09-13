@@ -1,0 +1,39 @@
+# Creasiv
+
+> Creasiv; yazılım, tasarım ve prodüksiyonu aynı çatı altında birleştiren yeni nesil bir dijital kreatif stüdyodur. Türkiye genelinde markalara web sitesi, e-ticaret, kurumsal kimlik, drone çekimi ve video prodüksiyon hizmetleri sunar.
+
+- Web sitesi: https://creasiv.com
+- E-posta: creasivcom@gmail.com
+- Instagram: https://instagram.com/creasivcom
+- Dil: Türkçe
+
+## Yazılım Çözümleri
+
+- Kurumsal web siteleri: hız ve güvenilirlik odaklı marka siteleri
+- E-ticaret: dönüşüm optimizasyonu, güvenli ödeme, ölçeklenebilir altyapı
+- Landing page: reklam trafiğini satışa dönüştüren kampanya sayfaları
+- Web uygulamaları: SaaS, CRM, yönetim panelleri ve bulut yazılımları
+- SEO ve hız: teknik SEO ve performans optimizasyonu
+- Bulut ve entegrasyon: AWS ve modern bulut sağlayıcıları, API entegrasyonları
+
+## Tasarım Çözümleri
+
+- Logo tasarımı
+- Kurumsal kimlik: renk paleti, tipografi, kurumsal evrak, marka kılavuzu
+- Dijital vitrin: sosyal medya, web banner ve dijital reklam tasarımları
+- Ambalaj ve etiket tasarımı, 3D ürün giydirme
+- Baskı materyalleri: katalog, broşür, dergi, fuar standı
+- Tasarım sistemleri: Figma komponent kütüphaneleri ve UI sistemleri
+
+## Prodüksiyon Çözümleri
+
+- 8K drone ve FPV çekimi (lisanslı pilotlar)
+- Kurumsal tanıtım ve reklam filmleri
+- Mekan ve mimari çekim: otel, restoran, fabrika, ofis
+- Stüdyo ve ürün çekimi: e-ticaret ve katalog
+- Kurgu ve DaVinci Resolve renk düzenleme, ses tasarımı
+- Motion graphics, 3D logo animasyonu ve VFX
+
+## İletişim
+
+Proje talepleri için https://creasiv.com adresindeki iletişim formu veya creasivcom@gmail.com kullanılabilir.

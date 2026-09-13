@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+.env*.local
+
+# Geliştirme sırasında kalan, sitede kullanılmayan dosyalar
+page_full.html
+payload.txt
+get_21st_exact.cjs
+search_uiverse.cjs
+button-cropped.png

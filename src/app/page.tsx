@@ -311,7 +311,7 @@ export default function CreasivSite() {
          ========================================================= */}
       <aside
         aria-label="Hızlı Gezinti Menüsü"
-        className="fixed top-[148px] sm:top-[186px] md:top-[242px] lg:top-[286px] right-6 sm:right-8 md:right-10 w-28 sm:w-[138px] md:w-[185px] lg:w-[230px] flex flex-col items-center z-50 pointer-events-none"
+        className="fixed top-[calc(148px+env(safe-area-inset-top))] sm:top-[calc(186px+env(safe-area-inset-top))] md:top-[calc(242px+env(safe-area-inset-top))] lg:top-[calc(286px+env(safe-area-inset-top))] right-6 sm:right-8 md:right-10 w-28 sm:w-[138px] md:w-[185px] lg:w-[230px] flex flex-col items-center z-50 pointer-events-none"
       >
         <FloatingDock items={links} isOpen={dockOpen} onClose={() => setDockOpen(false)} />
       </aside>

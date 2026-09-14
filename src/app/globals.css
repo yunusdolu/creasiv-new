@@ -9,12 +9,21 @@ body {
   overflow-x: hidden;
   /* clip, hidden gibi yana taşmayı keser ama body'yi kaydırma kabı yapmaz (CSS view() animasyonu için şart) */
   overflow-x: clip;
-  background: #000;
+  /* Sabit: Safari sayfa en tepedeyken çubuk arkasını bu renkle doldurur (ilk kartın mavisi) */
+  background: #1A3DE8;
   color: #fff;
 }
 
 [data-flow-section] {
   will-change: transform;
+}
+
+/* viewport-fit=cover: kartların rengi Dinamik Ada ve URL çubuğunun arkasına uzanır (bölümler 100lvh).
+   Şeffaf kenarlar içeriği çubukların dışında tutar; arka plan rengi kenarın altına da boyanır.
+   Masaüstünde güvenli alan 0 ve lvh = svh → kenarlar 0. */
+.flow-art-container {
+  border-top: env(safe-area-inset-top, 0px) solid transparent;
+  border-bottom: max(calc(100lvh - 100svh), env(safe-area-inset-bottom, 0px)) solid transparent;
 }
 
 /* Bölüm geçişindeki dönüş: kaydırmaya bağlı, tarayıcının ekran kartında çalışır.

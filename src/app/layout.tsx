@@ -67,6 +67,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  // Sayfa Dinamik Ada ve Safari URL çubuğunun arkasına uzanır; çubukların arkasında düz renk yerine site görünür
+  viewportFit: "cover",
 };
 
 const jsonLd = {
@@ -166,7 +168,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className="dark">
-      <body className="bg-[#0a0a0a] text-white antialiased selection:bg-[#fd5200] selection:text-white">
+      <body className="bg-[#1A3DE8] text-white antialiased selection:bg-[#fd5200] selection:text-white">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}

@@ -72,7 +72,6 @@ const FlowArt: React.FC<FlowArtProps> = ({
   'aria-label': ariaLabel = 'Story scroll',
 }) => {
   const containerRef = useRef<HTMLElement>(null);
-  const tintRef = useRef<HTMLDivElement>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -84,16 +83,13 @@ const FlowArt: React.FC<FlowArtProps> = ({
     return () => mq.removeEventListener('change', update);
   }, []);
 
-  // O an ekranın altını kaplayan bölümün rengini iki yere yazar:
-  // - iOS Safari alt araç çubuğu şeridi (globals.css → .safari-tint; sadece iOS'ta görünür)
-  // - sayfa zemini (html/body): Safari'de en üst/en alttan esnetince kartların ötesinde görünen alan
-  //   (Safari üst çubuğu açılıştaki body rengine göre boyar, sonradan değişen rengi yok sayar)
-  // Renk sadece bölüm değişince yazılır; kaydırmada her karede iş yapılmaz.
+  // Sayfa zemini (html/body) = taban: Safari'de en üst/en alttan esnetince kartların ötesinde görünen alan.
+  // Önceki kart tamamen kapanana kadar (yeni kartın üst kenarı ekranın tepesine ulaşana kadar) eski rengi
+  // korur, sonra yeni kartın rengine geçer. Safari'nin üst/alt çubukları beyaz şeritlerden renk alır
+  // (globals.css → .safari-tint). Renk sadece kart değişince yazılır; kaydırmada her karede iş yapılmaz.
   useEffect(() => {
-    const tint = tintRef.current;
     const container = containerRef.current;
     if (!container) return;
-    const tintVisible = !!tint && getComputedStyle(tint).display !== 'none';
 
     const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-flow-section]'));
     const colors = sections.map((section) => {
@@ -107,17 +103,17 @@ const FlowArt: React.FC<FlowArtProps> = ({
     const update = () => {
       ticking = false;
       const getTop = (window as any).creasivGetSectionTop as ((id: string) => number) | undefined;
-      // Yeni bölüm ekran yüksekliğinin ~%55'i kadar girince renge geç: dönerek gelen kart ancak o noktada
-      // alt kenarın çoğunu kaplıyor (daha erken geçişte önceki bölümün altında ince bir çizgi görünüyordu)
-      const threshold = window.scrollY + window.innerHeight * 0.45;
+      const y = window.scrollY;
       let active = 0;
       sections.forEach((section, i) => {
         const top = getTop && section.id ? getTop(section.id) : section.offsetTop;
-        if (threshold >= top) active = i;
+        if (y + 1 >= top) active = i;
       });
+      // Sayfanın en dibinde taban her zaman son kartın rengi (son kart tepeye birkaç px eksik oturabilir)
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (y >= maxScroll - 2) active = sections.length - 1;
       if (active !== current && colors[active]) {
         current = active;
-        if (tintVisible && tint) tint.style.backgroundColor = colors[active];
         document.documentElement.style.backgroundColor = colors[active];
         document.body.style.backgroundColor = colors[active];
       }
@@ -257,7 +253,8 @@ const FlowArt: React.FC<FlowArtProps> = ({
       className={cx('w-full overflow-x-hidden [overflow-x:clip]', className)}
     >
       {children}
-      <div ref={tintRef} className="safari-tint" aria-hidden="true" />
+      <div className="safari-tint safari-tint--top" aria-hidden="true" />
+      <div className="safari-tint safari-tint--bottom" aria-hidden="true" />
     </main>
   );
 };
